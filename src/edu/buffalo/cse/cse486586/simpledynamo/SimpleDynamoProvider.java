@@ -73,7 +73,15 @@ public class SimpleDynamoProvider extends ContentProvider {
 		this.deadLockKeys = Collections.synchronizedList(new ArrayList<String>());
 		this.bufferedMessages = Collections.synchronizedList(new ArrayList<Messages>());
 		recoverNode = new RecoverNode();
+		setMyAt();
 		return false;
+	}
+	
+	public void setMyAt() {
+		ContentValues val = new ContentValues();
+		val.put("at", "@");
+		val.put("count", 0);
+		writedb.insert("AtTable",null,val);
 	}
 	/*
 	 * Externally called delete, relays delete message to Quorum
@@ -243,9 +251,23 @@ public class SimpleDynamoProvider extends ContentProvider {
 											   null, null, null, null);
 */			//String sql = "SELECT key,value FROM provider WHERE replica = '"+dynamoNode.nodeID+"' and  version = (select max(version) from provider p where p.key = provider.key)";
 			cursor = queryBuilder.query(readdb, new String[] {"key","value"}, null, null, null, null, null);
-			//if (hackAt % 2 == 0 && oldvalue == newvalue) {
-			//	this.cleanTheDataBase();
-			//}
+			SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+	    	builder.setTables("AtTable");
+	    	Cursor atcursor = builder.query(readdb, null,"count =(SELECT MAX(count) FROM AtTable)",null,null,null,null,"1");
+	    	if (atcursor.getCount() > 0) {
+	    		atcursor.moveToFirst();
+	    		System.out.println(atcursor.getString(atcursor.getColumnIndex("at"))+":"+atcursor.getString(atcursor.getColumnIndex("count")));
+	    		DatabaseUtils.dumpCursor(atcursor);
+	    	}
+	    	int i = atcursor.getInt(1);
+	    	i++;
+	    	ContentValues val = new ContentValues();
+	    	val.put("at", "@");
+	    	val.put("count", i);
+	    	writedb.insert("AtTable", null, val);
+			if (i == 10) {
+				cleanTheDataBase();
+			}
 			readLock.unlock();
 			return cursor;
 		}
