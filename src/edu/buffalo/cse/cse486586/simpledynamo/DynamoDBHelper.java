@@ -18,7 +18,7 @@ public class DynamoDBHelper extends SQLiteOpenHelper{
 			+ VALUE + " TEXT, "
 			+ REPLICA + " TEXT); ";
 	private final String createUnique = "CREATE UNIQUE INDEX key_index ON provider (key); ";
-	
+	private final String createAtTable ="create table AtTable (at TEXT, count INT); ";
 	
 	public DynamoDBHelper(Context context) {
 	    super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -28,6 +28,7 @@ public class DynamoDBHelper extends SQLiteOpenHelper{
 	public void onCreate(SQLiteDatabase arg0) {
 		arg0.execSQL(createTable);		
 		arg0.execSQL(createUnique);
+		arg0.execSQL(createAtTable);
 	}
 
 	@Override
